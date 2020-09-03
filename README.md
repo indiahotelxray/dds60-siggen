@@ -2,7 +2,7 @@
 Signal generator with DDS60 module from AmQRP and Arduino Micro, created on a breadboard to diagnose issues with a QRP kit.  This will likely never get updated again.
 
 # references / sources / inspiriation
-* [W6AKB Sweeper](http://hamradioprojects.com/authors/w6akb/+sweeper/)
+* [W6AKB Sweeper](http://hamradioprojects.com/authors/w6akb/+sweeper/) - using different display, don't need SWR meter.
 * [AmQRP DDS60](https://midnightdesignsolutions.com/dds60/)
     
 # alternative devices that do more and do better.
