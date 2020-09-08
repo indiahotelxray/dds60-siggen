@@ -10,10 +10,10 @@
               P1-3 -> D8
          +- OLED display (SSD1306)
               I2C - SDA - D2; SCL - D3; Reset - D4
-         +- Rotary Encoder - not implemented
+         +- Rotary Encoder - not tested
               Up/down - freq change
               Press - increment step 10/50/100/500/1000 kHz
-         +- Buttons - not implemented
+         +- Buttons - not tested
               B1 - change band
               B2 - change mode (sweep,vfo,memory,sig-gen)
 
