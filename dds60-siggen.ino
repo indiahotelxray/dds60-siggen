@@ -3,58 +3,61 @@
     Arduino DDS60 signal generator / VFO
       based on code from http://hamradioprojects.com/authors/w6akb/+sweeper/
 
-      Arduino + SeeedStudio Protoboard
-         +- DDS60 -> BNC
-              P1-1 -> D5
+      Arduino + Protoshield
+         +- DDS60 -> SMA
+              P1-1 -> D5  confirm ... ?
               P1-2 -> D9
               P1-3 -> D8
-         +- OLED display (SSD1306)
-              I2C - SDA - D2; SCL - D3; Reset - D4
+         +- LCD display (16x2)
+              Adafruit Display used I2C - SDA - D2; SCL - D3; Reset - D4
+              rs, rw, enable, d4, d5, d6, d7)
          +- Rotary Encoder - not tested
               Up/down - freq change
               Press - increment step 10/50/100/500/1000 kHz
          +- Buttons - not tested
-              B1 - change band
-              B2 - change mode (sweep,vfo,memory,sig-gen)
+              BAND - change band
+              MODE - change mode (sweep,vfo,memory,sig-gen)
+         +- RCA plugs on A3, A4, A5 for measurements.
 
      TODOs:
-        - Add Si570 support with alternate SetFreq method
         - Debounce buttons
 */
 
 #include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins 2-3)
-#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#include <LiquidCrystal.h>
 
 
-// DDS60 pins
+// LCD 1602 pins
+#define RS 0
+//#define LCD_RW 
+#define EN 1
+#define LCD_D4 2
+#define LCD_D5 3
+#define LCD_D6 4
+#define LCD_D7 5
+
+// DDS60 pins - don't mess with these
 #define DDSLOAD 8
 #define DDSCLOCK 9
 #define DDSDATA 10
 
 //buttons
-#define B1 5
-#define B2 6
-// use analog pins
-#define ROT_UP 11  // 17? A3
-#define ROT_DOWN 12  //18? A4
-#define ROT_PRESS 13 //19? A5
+#define BAND 6
+#define MODE 7
+
+// use analog pins for these
+#define ROT_UP A0  
+#define ROT_DOWN A1  
+#define ROT_PRESS A2 
+
+// analog a3, a4, a5 used by RCA ports
 
 // static values
 static long freq = 14000000L;
 static char mode = 'v';
 static bool update = false;  // used to signal stopping a sweep/scan
-
-
 
 void DDS_freq(unsigned long _freq)  // set DDS freq in hz
 {
@@ -103,6 +106,8 @@ void DDS_off()  // shut down DDS
   DDS_freq(0L);
 }
 
+// initialize LCD
+LiquidCrystal display(RS, EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
 
 void setup() {
@@ -129,26 +134,24 @@ void setup() {
 
 
 void display_init() {
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
-    Serial.println(F("SSD1306 allocation failed"));
-    //for (;;); // Don't proceed, loop forever
-  }
+  display.begin(16, 2);
 
   // Show initial display buffer contents on the screen --
   // the library initializes this with an Adafruit splash screen.
   display.display();
   //delay(250); // Pause for 1 seconds
-  display.println(F("kc2ihx dds"));
+  display.print(F("kc2ihx dds"));
+  delay(250);
 
   // Clear the buffer
-  display.clearDisplay();
+  display.clear();
+
 }
 
 void button_init()
 {
-  pinMode(B1, INPUT);
-  pinMode(B2, INPUT);
+  pinMode(BAND, INPUT);
+  pinMode(MODE, INPUT);
   pinMode(ROT_UP, INPUT);
   pinMode(ROT_DOWN, INPUT);
   pinMode(ROT_PRESS, INPUT);
@@ -156,8 +159,8 @@ void button_init()
   attachInterrupt(digitalPinToInterrupt(ROT_UP), incr, FALLING);
   attachInterrupt(digitalPinToInterrupt(ROT_DOWN), decr, FALLING);
   attachInterrupt(digitalPinToInterrupt(ROT_PRESS), ch_step, FALLING);
-  attachInterrupt(digitalPinToInterrupt(B1), ch_band, FALLING);
-  attachInterrupt(digitalPinToInterrupt(B2), ch_mode, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BAND), ch_band, FALLING);
+  attachInterrupt(digitalPinToInterrupt(MODE), ch_mode, FALLING);
 }
 
 void DDS_init()
@@ -260,7 +263,8 @@ void memory_read() {
   MemItem entry;
   EEPROM.get(address, entry);
   freq = entry.freq;
-  mem_name = entry.memName;
+  //mem_name = entry.memName;
+  strncpy(mem_name, entry.memName, sizeof(entry.memName) - 1);
 }
 
 // vfo constants
@@ -394,15 +398,11 @@ void displayFreq(long _freq) {
   int khz = (_freq / 1000) % 1000;
   int _10hz = ((_freq % 1000) % 1000) / 10;
 
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  display.cp437(true);
-  display.setCursor(0, 0);
+  display.clear();
   // print frequency
   char strBuf[10];
   sprintf(strBuf, "%2d.%03d.%02d", mhz, khz, _10hz);
-  display.println(strBuf);
+  display.print(strBuf);
   Serial.print(strBuf);
   Serial.print("Mhz ");
 
@@ -423,7 +423,7 @@ void displayFreq(long _freq) {
       break;
   }
 
-  display.println(strBuf2);
+  display.print(strBuf2);
   Serial.println(strBuf2);
 
   display.display(); // need this to update display!
