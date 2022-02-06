@@ -55,7 +55,7 @@
 // analog a3, a4, a5 used by RCA ports
 
 // static values
-static long freq = 14000000L;
+static unsigned long freq = 14000000L;
 static char mode = 'v';
 static bool update = false;  // used to signal stopping a sweep/scan
 
@@ -277,13 +277,13 @@ static const PROGMEM uint16_t vfo_step[] = {
 // band constants
 static uint8_t i_band = 5; //start at 20m
 static const PROGMEM uint8_t n_band = 11;
-static const PROGMEM int band_name[] = {
+static const PROGMEM unsigned int band_name[] = {
   630, 160, 80, 40, 30, 20, 17, 15, 12, 10, 6
 };
-static const PROGMEM int band_start[] = {
+static const PROGMEM unsigned long band_start[] = {
   472, 1800, 3500, 7000, 10100, 14000, 18068, 21000, 29890, 28000, 50000
 };
-static const PROGMEM int band_end[] = {
+static const PROGMEM unsigned long band_end[] = {
   479, 2000, 4000, 7300, 10150, 14350, 18168, 21450, 24990, 29700, 54000
 };
 
@@ -375,12 +375,12 @@ void ch_band() {
       break;
     case 'g':
       // increment Mhz by 1
-      int mhz = freq / (1000 * 1000);
+      int mhz = freq / 1000 / 1000;
       mhz += 1;
       if (mhz > 59) {
         mhz = 1;
       }
-      freq = mhz * (1000 * 1000);
+      freq = mhz * 1000 * 1000;
       break;
   }
 }
