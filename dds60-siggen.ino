@@ -30,13 +30,13 @@
 
 
 // LCD 1602 pins
-#define RS 0
-//#define LCD_RW 
-#define EN 1
-#define LCD_D4 2
-#define LCD_D5 3
-#define LCD_D6 4
-#define LCD_D7 5
+#define RS 13
+#define RW 12
+#define EN 11
+#define LCD_D4 3
+#define LCD_D5 4
+#define LCD_D6 5
+#define LCD_D7 6
 
 // DDS60 pins - don't mess with these
 #define DDSLOAD 8
@@ -44,15 +44,15 @@
 #define DDSDATA 10
 
 //buttons
-#define BAND 6
-#define MODE 7
+#define BAND 0
+#define MODE 1
 
 // use analog pins for these
-#define ROT_UP A0  
-#define ROT_DOWN A1  
-#define ROT_PRESS A2 
+#define ROT_UP A3 
+#define ROT_DOWN A4  
+#define ROT_PRESS 2 
 
-// analog a3, a4, a5 used by RCA ports
+// analog a0, a1, a2 used by RCA ports
 
 // static values
 static unsigned long freq = 14000000L;
@@ -107,7 +107,7 @@ void DDS_off()  // shut down DDS
 }
 
 // initialize LCD
-LiquidCrystal display(RS, EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+LiquidCrystal display(RS, RW, EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
 
 void setup() {
@@ -150,14 +150,14 @@ void display_init() {
 
 void button_init()
 {
-  pinMode(BAND, INPUT);
-  pinMode(MODE, INPUT);
-  pinMode(ROT_UP, INPUT);
-  pinMode(ROT_DOWN, INPUT);
-  pinMode(ROT_PRESS, INPUT);
+  pinMode(BAND, INPUT_PULLUP);
+  pinMode(MODE, INPUT_PULLUP);
+  //pinMode(ROT_UP, INPUT);
+  //pinMode(ROT_DOWN, INPUT);
+  pinMode(ROT_PRESS, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(ROT_UP), incr, FALLING);
-  attachInterrupt(digitalPinToInterrupt(ROT_DOWN), decr, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(ROT_UP), incr, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(ROT_DOWN), decr, FALLING);
   attachInterrupt(digitalPinToInterrupt(ROT_PRESS), ch_step, FALLING);
   attachInterrupt(digitalPinToInterrupt(BAND), ch_band, FALLING);
   attachInterrupt(digitalPinToInterrupt(MODE), ch_mode, FALLING);
@@ -258,7 +258,7 @@ void memory_read() {
      read from eeprom
   */
   EEPROM.get(1,n_mem);
-  int max_mem = min(n_mem, (EEPROM.length()-4)/sizeof(MemItem));   
+  //int max_mem = min(n_mem, (EEPROM.length()-4)/sizeof(MemItem));   
   int address = i_mem*sizeof(MemItem) + 4;
   MemItem entry;
   EEPROM.get(address, entry);
