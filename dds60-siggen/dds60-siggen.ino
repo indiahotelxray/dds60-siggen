@@ -381,7 +381,7 @@ void displayFreq(long _freq) {
 }
 
 void setFreq(long _freq) {
-  DDS_freq(_freq); // output as long
+  dds60module.tune(_freq); // output as long
   displayFreq(_freq);
 }
 
