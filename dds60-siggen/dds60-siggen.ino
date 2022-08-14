@@ -1,7 +1,6 @@
 
 /**
     Arduino DDS60 signal generator / VFO
-      based on code from http://hamradioprojects.com/authors/w6akb/+sweeper/
 
       Arduino + Protoshield
          +- DDS60 -> SMA
@@ -27,7 +26,7 @@
 #include <EEPROM.h>
 #include <LCD_I2C.h>
 #include <EncoderButton.h>
-
+#include <dds60.h>
 
 // DDS60 pins - don't mess with these
 #define DDSLOAD 8
@@ -50,55 +49,11 @@ static unsigned long freq = 14000000L;
 static char mode = 'v';
 static bool update = false;  // used to signal stopping a sweep/scan
 
-void DDS_freq(unsigned long _freq)  // set DDS freq in hz
-{
-  unsigned long clock = 180000000L;  // 180 mhz, may need calibration
-  int64_t scale = 0x100000000LL;
-  unsigned long tune;                // tune word is delta phase per clock
-  int ctrl, i;                       // control bits and phase angle
-
-  if (_freq == 0)
-  {
-    tune = 0;
-    ctrl = 4;  // enable power down
-  }
-  else
-  {
-    tune = (_freq * scale) / clock;
-    ctrl = 1;  // enable clock multiplier
-
-    digitalWrite(DDSLOAD, LOW);  // reset load pin
-    digitalWrite(DDSCLOCK, LOW); // data xfer on low to high so start low
-
-    for (i = 32; i > 0; --i)  // send 32 bit tune word to DDS shift register
-    {
-      digitalWrite(DDSDATA, tune & 1); // present the data bit
-      digitalWrite(DDSCLOCK, HIGH);  // clock in the data bit
-      digitalWrite(DDSCLOCK, LOW);   // reset clock
-      tune >>= 1;                    // go to next bit
-    }
-  }
-  for (i = 8; i > 0; --i)  // send control byte to DDS
-  {
-    digitalWrite(DDSDATA, ctrl & 1);
-    digitalWrite(DDSCLOCK, HIGH);
-    digitalWrite(DDSCLOCK, LOW);
-    ctrl >>= 1;
-  }
-  // DDS load data into operating register
-  digitalWrite(DDSLOAD, HIGH);  // data loads on low to high
-  digitalWrite(DDSLOAD, LOW);   // reset load pin
-}
-
-
-
-void DDS_off()  // shut down DDS
-{
-  DDS_freq(0L);
-}
-
 // initialize LCD
 LCD_I2C display(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+// initialize DDS60
+DDS60 dds60module(DDSLOAD, DDSCLOCK, DDSDATA);
 
 void setup() {
   // put your setup code here, to run once:
@@ -110,9 +65,6 @@ void setup() {
   
   // initialize display
   displayInit();
-
-  // setup DDS
-  DDS_init();
 
   // initialize buttons
   buttonInit();
@@ -167,16 +119,6 @@ void buttonInit()
   attachInterrupt(digitalPinToInterrupt(BAND), ch_band, FALLING);
   attachInterrupt(digitalPinToInterrupt(MODE), ch_mode, FALLING);
 }
-
-void DDS_init()
-{
-  pinMode(DDSCLOCK, OUTPUT); // set pins to output mode
-  pinMode(DDSDATA, OUTPUT);
-  pinMode(DDSLOAD, OUTPUT);
-}
-
-
-
 
 // mode functions and variables
 /**
