@@ -1,18 +1,17 @@
-#ifndef Morse_h
-#define Morse_h
+#ifndef dss60_h
+#define dds60_h
 
 #include "Arduino.h"
 class DDS60
 {
     public:
-        DSS60();
-        void tune(int freq);
+        DDS60(int load, int clock, int data);
+        void tune(unsigned long freq);
         void off();
     private:
         byte _pload;
         byte _pclock;
         byte _pdata;
-
 };
 
 #endif

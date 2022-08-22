@@ -25,7 +25,8 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <LCD_I2C.h>
-#include <EncoderButton.h>
+#include <Encoder.h>
+#include <Bounce2.h>
 #include <dds60.h>
 
 // DDS60 pins - don't mess with these
@@ -34,12 +35,12 @@
 #define DDSDATA 10
 
 //buttons
-#define BAND 2
-#define MODE 3
+#define BAND 5
+#define MODE 6
 
-// use 2/3 pins for interupts - need to rewire
-#define ROT_UP A4
-#define ROT_DOWN A5 
+// use 2/3 pins for interupts - hardwired now
+#define ROT_UP 2
+#define ROT_DOWN 3 
 #define ROT_PRESS 4
 
 // analog a0, a1, a2 used by RCA ports
@@ -49,11 +50,19 @@ static unsigned long freq = 14000000L;
 static char mode = 'v';
 static bool update = false;  // used to signal stopping a sweep/scan
 
-// initialize LCD
+// initialize LCD object
 LCD_I2C display(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-// initialize DDS60
+// initialize DDS60 object
 DDS60 dds60module(DDSLOAD, DDSCLOCK, DDSDATA);
+
+// initialize encoder object
+Encoder enc(ROT_UP,ROT_DOWN);
+
+Bounce2::Button bandB = Bounce2::Button();
+Bounce2::Button modeB = Bounce2::Button();
+Bounce2::Button rotB = Bounce2::Button();
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -68,6 +77,7 @@ void setup() {
 
   // initialize buttons
   buttonInit();
+
 
   // set frequency, uses this variable to not be constantly writing to VFO
   update = true;
@@ -87,11 +97,10 @@ void checkTest() {
   }
 }
 
-
 void displayInit() {
   // display.begin(16, 2);
   display.begin();
-  display.backlight();
+  // display.backlight();
   
   // Show initial display buffer contents on the screen --
   // the library initializes this with an Adafruit splash screen.
@@ -107,17 +116,16 @@ void displayInit() {
 
 void buttonInit()
 {
-  pinMode(BAND, INPUT_PULLUP);
-  pinMode(MODE, INPUT_PULLUP);
-  //pinMode(ROT_UP, INPUT);
-  //pinMode(ROT_DOWN, INPUT);
-  pinMode(ROT_PRESS, INPUT_PULLUP);
+   bandB.attach(BAND, INPUT_PULLUP);
+   modeB.attach(MODE, INPUT_PULLUP);
+   rotB.attach(ROT_PRESS, INPUT_PULLUP);
+   bandB.interval(5);
+   modeB.interval(5);
+   rotB.interval(5);
+   bandB.setPressedState(LOW);
+   modeB.setPressedState(LOW);
+   rotB.setPressedState(LOW);
 
-  //attachInterrupt(digitalPinToInterrupt(ROT_UP), incr, FALLING);
-  //attachInterrupt(digitalPinToInterrupt(ROT_DOWN), decr, FALLING);
-  attachInterrupt(digitalPinToInterrupt(ROT_PRESS), ch_step, FALLING);
-  attachInterrupt(digitalPinToInterrupt(BAND), ch_band, FALLING);
-  attachInterrupt(digitalPinToInterrupt(MODE), ch_mode, FALLING);
 }
 
 // mode functions and variables
@@ -235,15 +243,6 @@ static const PROGMEM unsigned long band_end[] = {
 };
 
 
-// control functions
-void decr() {
-  rotate(-1);
-}
-
-void incr() {
-  rotate(1);
-}
-
 void rotate(int sign) {
   update = true;
   switch (mode) {
@@ -350,30 +349,31 @@ void displayFreq(long _freq) {
 
   display.clear();
   // print frequency
-  char strBuf[10];
-  sprintf(strBuf, "%2d.%03d.%02d", mhz, khz, _10hz);
-  display.println(strBuf);
-  Serial.print(strBuf);
-  Serial.println("Mhz ");
+  char strBuf[16];
+//  sprintf(strBuf, "%2d.%03d.%02d MHz", mhz, khz, _10hz);
+  sprintf(strBuf, "%2d.%03d.%02d MHz", mhz, khz, _10hz);
+  display.setCursor(0,0);
+  display.print(strBuf);
+  Serial.println(strBuf);
 
   // followed by printing the mode
-  char strBuf2[10];
+  char strBuf2[16];
   switch (mode) {
     case 's':
-      sprintf(strBuf2, "SWP - %4d khz", sweep_step[i_sweep_step]);
+      sprintf(strBuf2, "SWP %4d khz", sweep_step[i_sweep_step]);
       break;
     case 'v':
-      sprintf(strBuf2, "VFO - %dHz", vfo_step[i_vfo_step]);
+      sprintf(strBuf2, "VFO %dHz", vfo_step[i_vfo_step]);
       break;
     case 'm':
       sprintf(strBuf2, "M%4d%s", i_mem, mem_name);
       break;
     case 'g':
-      sprintf(strBuf2, "SG  - %dHz", vfo_step[i_vfo_step]);
+      sprintf(strBuf2, "SG %dHz", vfo_step[i_vfo_step]);
       break;
   }
-
-  display.println(strBuf2);
+  display.setCursor(0,1);
+  display.print(strBuf2);
   Serial.println(strBuf2);
 
   display.display(); // need this to update display!
@@ -404,8 +404,35 @@ void setFreq(long _freq) {
  }
 
 
+long encPosition = -999;
 
 void loop() {
+  bandB.update();
+  if(bandB.pressed()){
+    ch_band();
+  }
+  modeB.update();
+  if(modeB.pressed()){
+    ch_mode();
+  }
+  rotB.update();
+  if(rotB.pressed()){
+    ch_step();
+  }
+
+  // update encoder
+  long newPos = enc.read();
+  if(newPos != encPosition){
+    long diff = newPos - encPosition;
+    if(diff > 1){
+      rotate(diff);
+    }
+    if(diff < -1){
+      rotate(diff);
+    }
+    encPosition = newPos;
+  }
+
   switch (mode) {
     case 't':
       test_mode();
