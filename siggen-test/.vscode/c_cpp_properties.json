@@ -20,7 +20,6 @@
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\standard",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\SPI\\src",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\Wire\\src",
-                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\EEPROM\\src",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\LCD_I2C\\src",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\Encoder",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\Bounce2\\src",
