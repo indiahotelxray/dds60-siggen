@@ -132,28 +132,17 @@ void buttonInit()
 
 }
 
-// mode functions and variables
-/**
-   swp - sweep
-   mem - memory not yet implemented
-   vfo - simple case with setfreq limited by bands
-   sig - free ranging vfo
-*/
-
-
-
-
 // sweeps constants
 // sweep reach in khz
 static uint8_t i_sweep_size = 0;
 static const PROGMEM uint8_t n_sweep_size = 10;
-static const PROGMEM int sweep_size[] = {
+static const PROGMEM long sweep_size[] = {
   1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000
 };
 // sweep size in hz
 static uint8_t i_sweep_step = 0;
 static const PROGMEM uint8_t n_sweep_step = 7;
-static const PROGMEM int sweep_step[] = {
+static const PROGMEM long sweep_step[] = {
   1, 5, 10, 50, 100, 500, 1000
 };
 
@@ -164,7 +153,8 @@ void sweep() {
   int end_freq = freq + sweep_size[i_sweep_size] * 1000;
   int sweep_freq = freq;
   while ((sweep_freq >= end_freq) & not update) {
-    setFreq(sweep_freq);
+    //setFreq(sweep_freq);
+    dds60module.tune(sweep_freq);
     sweep_freq += sweep_step[i_sweep_step];
   }
 }
@@ -230,7 +220,7 @@ void memory_read() {
 // vfo steps in hz
 static uint8_t i_vfo_step = 6; // start at 1khz step
 static const PROGMEM uint8_t n_vfo_step = 7;
-static const PROGMEM uint16_t vfo_step[] = {
+static const PROGMEM long vfo_step[] = {
   50, 100, 250, 500, 1000, 2500, 5000
 };
 // band constants
@@ -364,16 +354,16 @@ void displayFreq(long _freq) {
   char strBuf2[16];
   switch (mode) {
     case 's':
-      sprintf(strBuf2, "SWP %4d khz", sweep_step[i_sweep_step]);
+      sprintf(strBuf2, "SWP %4d khz", (int) sweep_step[i_sweep_step]);
       break;
     case 'v':
-      sprintf(strBuf2, "VFO %dHz", vfo_step[i_vfo_step]);
+      sprintf(strBuf2, "VFO %dHz", (int) vfo_step[i_vfo_step]);
       break;
     case 'm':
       sprintf(strBuf2, "M%4d%s", i_mem, mem_name);
       break;
     case 'g':
-      sprintf(strBuf2, "SG %dHz", vfo_step[i_vfo_step]);
+      sprintf(strBuf2, "SG %dHz", (int) vfo_step[i_vfo_step]);
       break;
   }
   display.setCursor(0,1);
