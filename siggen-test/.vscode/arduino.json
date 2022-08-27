@@ -1,0 +1,5 @@
+{
+    "sketch": "siggen-test.ino",
+    "board": "arduino:avr:uno",
+    "port": "COM5"
+}

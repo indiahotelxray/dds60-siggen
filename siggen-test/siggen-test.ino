@@ -90,16 +90,10 @@ void setup() {
 
 void checkTest() {
     // if BAND and MODE buttons are pressed, enter test mode
-  //bandB.update();
-  modeB.update();
-  if(modeB.pressed()){
+  if(bandB.pressed() & modeB.presseD()){
     mode = 't';  // enter test mode
   }
-  display.setCursor(0,0);
-  display.print(F("TEST MODE"));
-  delay(500);
 }
-
 
 void displayInit() {
   // display.begin(16, 2);
@@ -197,7 +191,7 @@ void memory_write() {
     // input format = 1,1400
     char memLoc=(char)Serial.parseInt();
     entry.freq = Serial.parseInt(); // docs claim this reads a long
-    String nm = Serial.readStringUntil('\n');
+    String nm = Serial.readStringUntil("\n");
     nm.toCharArray(entry.memName, 8);
     if(memLoc > max_mem or memLoc > (n_mem+1)){ // check that in valid range.
       Serial.print(F("invalid mem num; no write"));
