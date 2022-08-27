@@ -25,9 +25,9 @@
 #include <Wire.h>
 //#include <EEPROM.h>
 #include <LCD_I2C.h>
-#include <Encoder.h>
 #include <Bounce2.h>
 #include <dds60.h>
+#include <RotaryEncoder.h>
 
 // DDS60 pins - don't mess with these
 #define DDSLOAD 8
@@ -39,8 +39,8 @@
 #define MODE 6
 
 // use 2/3 pins for interupts - hardwired now
-#define ROT_UP 2
-#define ROT_DOWN 3 
+#define ROT_UP 3
+#define ROT_DOWN 2 
 #define ROT_PRESS 4
 
 // analog a0, a1, a2 used by RCA ports
@@ -57,7 +57,8 @@ LCD_I2C display(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2
 DDS60 dds60module(DDSLOAD, DDSCLOCK, DDSDATA);
 
 // initialize encoder object
-Encoder enc(ROT_UP,ROT_DOWN);
+//Encoder enc(ROT_UP, ROT_DOWN);
+RotaryEncoder *encoder = nullptr;
 
 Bounce2::Button bandB = Bounce2::Button();
 Bounce2::Button modeB = Bounce2::Button();
@@ -99,6 +100,25 @@ void checkTest() {
   display.setCursor(0,0);
   display.print(F("TEST MODE"));
   delay(500);
+}
+
+void encoderInit() {
+  //PCICR |= (1 << PCIE1);    // This enables Pin Change Interrupt 1 that covers the Analog input pins or Port C.
+  //PCMSK1 |= (1 << PCINT10) | (1 << PCINT11); 
+  //pinMode(ROT_UP, INPUT_PULLUP);
+  //pinMode(ROT_DOWN, INPUT_PULLUP);
+
+  encoder = new RotaryEncoder(ROT_DOWN, ROT_UP, RotaryEncoder::LatchMode::TWO03);
+
+  // Initialize interrupts
+  attachInterrupt(ROT_DOWN, checkPosition, CHANGE);
+  attachInterrupt(ROT_UP, checkPosition, CHANGE);
+}
+
+// This interrupt routine will be called on any change of one of the input signals
+void checkPosition()
+{
+  encoder->tick(); // just call tick() to check the state.
 }
 
 void displayInit() {
@@ -158,19 +178,24 @@ void buttonInit()
  }
 
 
-long encPosition = -999;
+//long encPosition = -999;
+signed long position = 0;
 
 void loop() {
-
-  // update encoder
-  long newPos = enc.read();
-  if(newPos != encPosition){
-    long diff = newPos - encPosition;
-    encPosition = newPos;
-    display.setCursor(0,1);
-    display.print(newPos);
-  }
-
+ 
   test_mode();
+
+  static int pos = 0;
+
+  encoder->tick();  // get state
+  int newPos = encoder->getPosition();
+  if (pos != newPos) {
+    display.setCursor(0,1);
+    display.print("pos:");
+    display.print(newPos);
+    display.print(" dir:");
+    display.print((int)(encoder->getDirection()));
+    pos = newPos;
+  } // if
 
 }

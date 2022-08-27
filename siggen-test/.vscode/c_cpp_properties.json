@@ -21,9 +21,9 @@
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\SPI\\src",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\Wire\\src",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\LCD_I2C\\src",
-                "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\Encoder",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\Bounce2\\src",
                 "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\dds60",
+                "C:\\Users\\heism\\OneDrive\\Documents\\Arduino\\libraries\\RotaryEncoder\\src",
                 "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include",
                 "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include-fixed",
                 "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\avr\\include"
